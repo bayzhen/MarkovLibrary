@@ -32,3 +32,7 @@ IMPLEMENT_MODULE(FDefaultModuleImpl, YourNewModule);
             "Type": "模块类型"
 }
 ```
+
+```cpp
+PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "YourNewModule" });
+```
