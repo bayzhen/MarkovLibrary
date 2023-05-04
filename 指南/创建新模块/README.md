@@ -10,7 +10,7 @@ graph TD;
     H --> I[完成];
 ```
 
-//YourNewModule.Build.cs
+Source/YourNewModule/YourNewModule.Build.cs
 
 ```cs
 using UnrealBuildTool;
@@ -24,7 +24,7 @@ public class YourNewModule: ModuleRules
 }
 ```
 
-YourNewModuleModule.cpp
+Source/YourNewModule/Private/YourNewModuleModule.cpp
 
 ```cpp
 #include "Modules/ModuleManager.h"
@@ -41,7 +41,7 @@ IMPLEMENT_MODULE(FDefaultModuleImpl, YourNewModule);
 }
 ```
 
-YourProject.Build.cs
+Source/YourProject.Build.cs
 
 ```cpp
 PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "YourNewModule" });
