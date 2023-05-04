@@ -11,6 +11,7 @@ graph TD;
 ```
 
 ```cs
+//YourNewModule.Build.cs
 using UnrealBuildTool;
 
 public class YourNewModule: ModuleRules
@@ -22,16 +23,24 @@ public class YourNewModule: ModuleRules
 }
 ```
 
+YourNewModuleModule.cpp
+
 ```cpp
 #include "Modules/ModuleManager.h"
 
 IMPLEMENT_MODULE(FDefaultModuleImpl, YourNewModule);
-在YourProject.uproject中的"Modules"加入:
+```
+
+在 YourProject.uproject 中的"Modules"加入:
+
+```Json
 {
             "Name": "YourNewModule",
             "Type": "模块类型"
 }
 ```
+
+YourProject.Build.cs
 
 ```cpp
 PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "YourNewModule" });
