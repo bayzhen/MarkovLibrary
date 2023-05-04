@@ -8,9 +8,13 @@
 			"Name": "MarkovLibrary",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
-      "AdditionalDependencies": [
-        "PCG"
-      ]
+			"AdditionalDependencies": [
+                "Engine"
+            ]
+		},
+		{
+            "Name": "MarkovPCG",
+            "Type": "Runtime"
 		}
 	],
 	"Plugins": [
