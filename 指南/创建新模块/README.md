@@ -1,5 +1,5 @@
 ```mermaid
-graph TD;
+graph LR;
     A[开始] --> B[在Source目录下创建YourNewModule文件夹];
     B --> C[在YourNewModule下创建Private和Public子文件夹];
     C --> D[创建YourNewModule.Build.cs并填写代码];
