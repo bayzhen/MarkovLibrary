@@ -18,3 +18,20 @@ F -->|删除| J[删除强化学习环境]
 J --> F
 F -->|断开连接| K(结束)
 ```
+```mermaid
+graph TD
+A(开始) --> B[初始化DjangoApp]
+B --> C[启动WebInterface]
+C --> D{处理请求}
+D -->|注册环境| E[调用UE4Connection注册环境]
+E --> D
+D -->|创建强化学习进程| F[调用RLController创建Agent]
+F --> D
+D -->|开始训练| G[调用RLController开始训练]
+G --> D
+D -->|停止训练| H[调用RLController停止训练]
+H --> D
+D -->|删除强化学习进程| I[调用RLController删除Agent]
+I --> D
+D --> J(结束)
+```
