@@ -22,7 +22,16 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	int32 length;
-	TArray<int32> Arr1;
+	int32 squareBlockSideLength;
+	int32 staticCubeGridSideLength;
+	int32 mainQueueLength;
+	int32 minimumHeight;
+	int32 maximumHeight;
+	int32 timeStepDuration;
+	TArray<int32> MainArray;
+	TArray<int32> TempArray;
+	bool bRandom;
+	int32 Seed;
+	FRandomStream MyRandomStream;
 
 };
