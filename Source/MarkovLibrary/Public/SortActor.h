@@ -63,6 +63,7 @@ public:
 		UStaticMesh* StaticMesh;
 	UPROPERTY(EditAnywhere)
 		UHierarchicalInstancedStaticMeshComponent* HISMComponent;
+
 	UFUNCTION(BlueprintCallable)
-		void GetHit();
+		void Move(int32 StartInstanceIndex, FTransform& Transform);
 };

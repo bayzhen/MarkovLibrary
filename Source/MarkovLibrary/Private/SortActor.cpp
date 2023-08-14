@@ -21,7 +21,6 @@ ASortActor::ASortActor()
 	MyRandomStream.Initialize(Seed);
 	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
 	this->SetRootComponent(Cast<USceneComponent>(HISMComponent));
-	HISMComponent->OnComponentHit.AddUnique(
 }
 
 void ASortActor::OnConstruction(const FTransform& Transform)
@@ -67,5 +66,10 @@ void ASortActor::Reset()
 			HISMComponent->AddInstance(Transform);
 		}
 	}
+}
+
+void ASortActor::Move(int32 StartInstanceIndex, FTransform& Transform)
+{
+	HISMComponent->BatchUpdateInstancesTransform(StartInstanceIndex, GeneratedRandomArray[StartInstanceIndex], Transform, true);
 }
 
