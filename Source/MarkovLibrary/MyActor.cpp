@@ -10,13 +10,15 @@ AMyActor::AMyActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-	USceneComponent* NewRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	this->SetRootComponent(NewRootComponent);
 	// Create component
-	InstancedMeshComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HierarchicalInstancedStaticMeshComponent"));
-
+	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HierarchicalInstancedStaticMeshComponent"));
 	// Attach the component to the root component
-	 InstancedMeshComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+	RootComponent = Cast<USceneComponent>(HISMComponent);
+}
+
+void AMyActor::OnConstruction(const FTransform& Transform)
+{
+	Reset();
 }
 
 // Called when the game starts or when spawned
@@ -33,7 +35,7 @@ void AMyActor::Tick(float DeltaTime)
 
 }
 
-void AMyActor::GenerateMaze() {
+void AMyActor::Reset() {
 	if (!(MyStaticMesh&&Width&&Height)) {
 		UE_LOG(LogTemp, Warning, TEXT("Static Mesh not set up."));
 		return;
@@ -42,9 +44,9 @@ void AMyActor::GenerateMaze() {
 	Maze = MyPrim.Maze;
 
 	// Set the static mesh to use for instances
-	InstancedMeshComponent->SetStaticMesh(MyStaticMesh);
-	InstancedMeshComponent->ClearInstances();
-
+	HISMComponent->SetStaticMesh(MyStaticMesh);
+	HISMComponent->ClearInstances();
+	FTransform HISMComponentTransform = HISMComponent->GetComponentTransform();
 	// Next, add instances to the component
 	for (int32 i = 0; i < Maze.Num(); i++)
 	{
@@ -52,11 +54,9 @@ void AMyActor::GenerateMaze() {
 		{
 			if (Maze[i][j])
 				continue;
-			// Create a transform for the instance
-			FTransform InstanceTransform = FTransform::Identity;
-			InstanceTransform.SetLocation(FVector(i * Gap, j * Gap, 0.f)+this->GetActorLocation()); // Set the location of the instance
-			// Add the instance to the component
-			InstancedMeshComponent->AddInstance(InstanceTransform);
+			FTransform Transform;
+			Transform.SetLocation(FVector(i * Gap, j * Gap, 0.0));
+			HISMComponent->AddInstance(Transform);
 		}
 	}
 }

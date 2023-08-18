@@ -10,8 +10,8 @@ UCLASS()
 class MARKOVLIBRARY_API ASortActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ASortActor();
 	virtual void OnConstruction(const FTransform& Transform) override;
@@ -19,51 +19,67 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void Reset();
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		float SquareBlockSideLength;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		float Height;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		float StaticCubeScale;
-	UPROPERTY(EditAnywhere)
-		int32 MainQueueLength;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
+		int32 NumOfPillars;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		int32 MinimumHeight;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		int32 MaximumHeight;
-	UPROPERTY(EditAnywhere)
-		float TimeStepDuration;
-	/// <summary>
-	/// 一开始生成的随机数数组，这个数组不会动。数字代表着这一柱实例的数量。
-	/// </summary>
-	UPROPERTY(EditAnywhere)
-		TArray<int32> GeneratedRandomArray;
-	/// <summary>
-	/// 这个数组里存储的是根实例的序号。
-	/// </summary>
-	UPROPERTY(EditAnywhere)
-		TArray<int32> MainArray;
-	/// <summary>
-	/// 这个数组里用于存放拿出来的柱子。
-	/// </summary>
-	UPROPERTY(EditAnywhere)
-		TArray<int32> TempArray;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		bool bRandom;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		int32 Seed;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		FRandomStream MyRandomStream;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		UStaticMesh* StaticMesh;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		UHierarchicalInstancedStaticMeshComponent* HISMComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
+		UCurveFloat* CurveFloat;
 
-	UFUNCTION(BlueprintCallable)
-		void Move(int32 StartInstanceIndex, FTransform& Transform);
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
+		void Reset();
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
+		void UpdatePillarTransform(int32 StartInstanceIndex, FTransform Transform);
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
+		int32 GetPillarIndexByInstanceIndex(int32 ItemIndex);
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		void TickMove(float Delta);
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		void GetColumnTransform(int32 ColumnIndex);
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		void SetSmoothMove(int32 ColumnIndex, FTransform EndTransform, float Duration);
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		bool IsSorted();
+
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		FTransform GetPillarTransform(int32 PillarIndex);
+private:
+	// 一开始生成的随机数数组，这个数组不会动。数字代表着这一柱实例的数量。
+	TArray<int32> PillarHeightArr;
+	// 这个数组里存储的是根实例的序号。
+	TArray<int32> PillarRootInstanceIndexArr;
+	// 排序后的柱子的Index。
+	TArray<int32> SortedPillarIndexArr;
+	// 时间期间
+	TArray<float> StepDurationArr;
+	// 已消耗的时间
+	TArray<float> StepTimeElapsedArr;
+	// 开始位置
+	TArray<FTransform> StepStartTransformArr;
+	// 目标位置
+	TArray<FTransform> StepEndTransformArr;
+	// Alpha
+	TArray<float> StepAlphaArr;
 };

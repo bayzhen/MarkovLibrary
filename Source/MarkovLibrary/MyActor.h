@@ -16,6 +16,7 @@ class MARKOVLIBRARY_API AMyActor : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AMyActor();
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -26,7 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		void GenerateMaze();
+		void Reset();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -40,7 +41,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float Gap;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UHierarchicalInstancedStaticMeshComponent* InstancedMeshComponent;
+		UHierarchicalInstancedStaticMeshComponent* HISMComponent;
 
 	UFUNCTION(BlueprintPure)
 		bool IsWall(int32 x, int32 y);
