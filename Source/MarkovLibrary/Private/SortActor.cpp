@@ -9,7 +9,7 @@ ASortActor::ASortActor()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	SquareBlockSideLength = 150.0;
+	BaseDistance = 150.0;
 	Height = 100.0;
 	StaticCubeScale = 1.0;
 	NumOfPillars = 10;
@@ -55,30 +55,32 @@ void ASortActor::Reset()
 	HISMComponent->ClearInstances();
 	PillarHeightArr.SetNum(NumOfPillars);
 	PillarRootInstanceIndexArr.SetNum(NumOfPillars);
-	for (int32 i = 0; i < PillarHeightArr.Num(); i++) {
+	for (int32 i = 0; i < NumOfPillars; i++) {
 		PillarHeightArr[i] = MyRandomStream.RandRange(MinimumHeight, MaximumHeight);
 	}
 	int32 count = 0;
-	for (int32 i = 0; i < PillarRootInstanceIndexArr.Num(); i++) {
+	for (int32 i = 0; i < NumOfPillars; i++) {
 		PillarRootInstanceIndexArr[i] = count;
 		count += PillarHeightArr[i];
 		for (int32 j = 0; j < PillarHeightArr[i]; j++) {
-			FTransform Transform;
-			Transform.SetLocation(FVector(0.0, i * SquareBlockSideLength, j * Height));
+			FTransform Transform = GetBaseTransform(i);
+			FVector Location = Transform.GetLocation();
+			Location += FVector(0, 0, j * Height);
+			Transform.SetLocation(Location);
 			int32 Index = HISMComponent->AddInstance(Transform);
 			UE_LOG(LogTemp, Log, TEXT("Index: %d"), Index);
 		}
 	}
 	StepDurationArr.Init(0.0f, NumOfPillars);
 	StepTimeElapsedArr.Init(0.0f, NumOfPillars);
-	StepStartTransformArr.Init(FTransform(), NumOfPillars);
-	StepEndTransformArr.Init(FTransform(), NumOfPillars);
+	StepPillarStartTransformArr.Init(FTransform(), NumOfPillars);
+	StepPillarEndTransformArr.Init(FTransform(), NumOfPillars);
 	StepAlphaArr.Init(1.0f, NumOfPillars);
 	for (int32 i = 0; i < NumOfPillars; i++) {
 		FTransform Transform;
 		HISMComponent->GetInstanceTransform(PillarRootInstanceIndexArr[i], Transform, true);
-		StepStartTransformArr[i] = Transform;
-		StepEndTransformArr[i] = Transform;
+		StepPillarStartTransformArr[i] = Transform;
+		StepPillarEndTransformArr[i] = Transform;
 	}
 }
 
@@ -99,9 +101,12 @@ void ASortActor::UpdatePillarTransform(int32 PillarIndex, FTransform Transform)
 void ASortActor::TickMove(float Delta) {
 	check(StepDurationArr.Num() == StepTimeElapsedArr.Num());
 	for (int32 i = 0; i < NumOfPillars; i++) {
-		StepTimeElapsedArr[i] += Delta;
-		StepAlphaArr[i] = FMath::Clamp(StepTimeElapsedArr[i] / StepDurationArr[i], 0.0f, 1.0f);
-		UpdatePillarTransform(i, FMath::Lerp(StepStartTransformArr[i], StepEndTransformArr[i], StepAlphaArr[i]));
+		float Alpha = StepTimeElapsedArr[i] / StepDurationArr[i];
+		if (Alpha <= 1) {
+			StepTimeElapsedArr[i] += Delta;
+			StepAlphaArr[i] = FMath::Clamp(StepTimeElapsedArr[i] / StepDurationArr[i], 0.0f, 1.0f);
+			UpdatePillarTransform(i, FMath::Lerp(StepPillarStartTransformArr[i], StepPillarEndTransformArr[i], StepAlphaArr[i]));
+		}
 	}
 }
 
@@ -127,13 +132,29 @@ bool ASortActor::IsSorted()
 	return true;
 }
 
-FTransform ASortActor::GetPillarTransform(int32 PillarIndex)
+FTransform ASortActor::GetPillarTransformByPillarIndex(int32 PillarIndex)
 {
 	check(PillarIndex < NumOfPillars);
 	int32 InstanceIndex = PillarRootInstanceIndexArr[PillarIndex];
 	FTransform PillarTransform;
 	HISMComponent->GetInstanceTransform(InstanceIndex, PillarTransform, true);
 	return PillarTransform;
+}
+
+FTransform ASortActor::GetBaseTransform(int32 BaseIndex)
+{
+	FTransform Transform;
+	Transform.SetLocation(FVector(0.0, BaseIndex * BaseDistance, 0.0));
+	return Transform;
+}
+
+void ASortActor::MovePillarToBase(int32 PillarIndex, int32 BaseIndex)
+{
+	FTransform PillarTransform = GetPillarTransformByPillarIndex(PillarIndex);
+	FTransform BaseTransform = GetBaseTransform(PillarIndex);
+	StepPillarStartTransformArr[PillarIndex] = PillarTransform;
+	StepPillarStartTransformArr[PillarIndex] = BaseTransform;
+	StepTimeElapsedArr[PillarIndex] = 0;
 }
 
 int32 ASortActor::GetPillarIndexByInstanceIndex(int32 InstanceIndex)
