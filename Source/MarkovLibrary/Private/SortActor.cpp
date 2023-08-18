@@ -17,20 +17,15 @@ ASortActor::ASortActor()
 	MaximumHeight = 20;
 	bRandom = false;
 	Seed = 10;
+	ChairTransform = FTransform(FVector(-100.0f, -100.0f, 0.0f));
+	SelectedPillarIndex = -1;
+	AvailableBase = -1;
 	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
 	this->SetRootComponent(Cast<USceneComponent>(HISMComponent));
 }
 
 void ASortActor::OnConstruction(const FTransform& Transform)
 {
-	if (!bRandom) {
-		MyRandomStream.Initialize(Seed);
-	}
-	else {
-		MyRandomStream.Initialize(FMath::Rand());
-	}
-	HISMComponent->SetStaticMesh(StaticMesh);
-	this->Reset();
 }
 
 
@@ -38,6 +33,15 @@ void ASortActor::OnConstruction(const FTransform& Transform)
 void ASortActor::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!bRandom) {
+		MyRandomStream.Initialize(Seed);
+	}
+	else {
+		MyRandomStream.Initialize(FMath::Rand());
+	}
+	HISMComponent->SetStaticMesh(StaticMesh);
+	//HISMComponent->OnComponentHit.Add
+	Reset();
 }
 
 
@@ -47,9 +51,8 @@ void ASortActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	TickMove(DeltaTime);
 }
-/// <summary>
-/// 重置各各网格体的位置。
-/// </summary>
+
+// 重置各各网格体的位置。
 void ASortActor::Reset()
 {
 	HISMComponent->ClearInstances();
@@ -105,7 +108,7 @@ void ASortActor::TickMove(float Delta) {
 		if (Alpha <= 1) {
 			StepTimeElapsedArr[i] += Delta;
 			StepAlphaArr[i] = FMath::Clamp(StepTimeElapsedArr[i] / StepDurationArr[i], 0.0f, 1.0f);
-			UpdatePillarTransform(i, FMath::Lerp(StepPillarStartTransformArr[i], StepPillarEndTransformArr[i], StepAlphaArr[i]));
+			UpdatePillarTransform(i, FTransform(FMath::Lerp(StepPillarStartTransformArr[i].GetLocation(), StepPillarEndTransformArr[i].GetLocation(), StepAlphaArr[i])));
 		}
 	}
 }
@@ -151,10 +154,19 @@ FTransform ASortActor::GetBaseTransform(int32 BaseIndex)
 void ASortActor::MovePillarToBase(int32 PillarIndex, int32 BaseIndex)
 {
 	FTransform PillarTransform = GetPillarTransformByPillarIndex(PillarIndex);
-	FTransform BaseTransform = GetBaseTransform(PillarIndex);
+	FTransform BaseTransform;
+	if (BaseIndex >= 0)
+		BaseTransform = GetBaseTransform(BaseIndex);
+	else
+		FTransform BaseTransform = ChairTransform;
 	StepPillarStartTransformArr[PillarIndex] = PillarTransform;
 	StepPillarStartTransformArr[PillarIndex] = BaseTransform;
 	StepTimeElapsedArr[PillarIndex] = 0;
+}
+
+void ASortActor::GameStep(int32 PillarIndex)
+{
+	MovePillarToBase(PillarIndex, AvailableBase);
 }
 
 int32 ASortActor::GetPillarIndexByInstanceIndex(int32 InstanceIndex)

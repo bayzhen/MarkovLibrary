@@ -47,6 +47,10 @@ public:
 		UHierarchicalInstancedStaticMeshComponent* HISMComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		UCurveFloat* CurveFloat;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
+		FTransform ChairTransform;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
+		int32 SelectedPillarIndex;
 
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void Reset();
@@ -54,24 +58,26 @@ public:
 		void UpdatePillarTransform(int32 StartInstanceIndex, FTransform Transform);
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		int32 GetPillarIndexByInstanceIndex(int32 ItemIndex);
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void TickMove(float Delta);
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void GetColumnTransform(int32 ColumnIndex);
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void SetSmoothMove(int32 ColumnIndex, FTransform EndTransform, float Duration);
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		bool IsSorted();
 
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		FTransform GetPillarTransformByPillarIndex(int32 PillarIndex);
 	// Base是基座，基座上面放得柱子。
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		FTransform GetBaseTransform(int32 BaseIndex);
 
-	UFUNCTION(BlurprintCallable, Category = "SortActor")
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void MovePillarToBase(int32 PillarIndex, int32 BaseIndex);
 
+	UFUNCTION(BlueprintCallable, Category = "SortActor")
+		void GameStep(int32 PillarIndex);
 
 private:
 	// 一开始生成的随机数数组，这个数组不会动。数字代表着这一柱实例的数量。
@@ -92,5 +98,5 @@ private:
 	TArray<float> StepAlphaArr;
 
 	bool bGaming;
-
+	int32 AvailableBase;
 };
