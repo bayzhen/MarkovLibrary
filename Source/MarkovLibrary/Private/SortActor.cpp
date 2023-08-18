@@ -17,9 +17,12 @@ ASortActor::ASortActor()
 	MaximumHeight = 20;
 	bRandom = false;
 	Seed = 10;
-	ChairTransform = FTransform(FVector(-100.0f, -100.0f, 0.0f));
+	ChairTransform = FTransform();
+	ChairTransform.SetLocation(FVector(-100, -100, 0));
+	ChairPillarIndex = -1;
+	bGaming = true;
 	SelectedPillarIndex = -1;
-	AvailableBase = -1;
+	AvailableBaseIndex = -1;
 	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
 	this->SetRootComponent(Cast<USceneComponent>(HISMComponent));
 }
@@ -58,11 +61,13 @@ void ASortActor::Reset()
 	HISMComponent->ClearInstances();
 	PillarHeightArr.SetNum(NumOfPillars);
 	PillarRootInstanceIndexArr.SetNum(NumOfPillars);
+	BasePillarArr.SetNum(NumOfPillars);
 	for (int32 i = 0; i < NumOfPillars; i++) {
 		PillarHeightArr[i] = MyRandomStream.RandRange(MinimumHeight, MaximumHeight);
 	}
 	int32 count = 0;
 	for (int32 i = 0; i < NumOfPillars; i++) {
+		BasePillarArr[i] = i;
 		PillarRootInstanceIndexArr[i] = count;
 		count += PillarHeightArr[i];
 		for (int32 j = 0; j < PillarHeightArr[i]; j++) {
@@ -74,7 +79,7 @@ void ASortActor::Reset()
 			UE_LOG(LogTemp, Log, TEXT("Index: %d"), Index);
 		}
 	}
-	StepDurationArr.Init(0.0f, NumOfPillars);
+	StepDurationArr.Init(0.5f, NumOfPillars);
 	StepTimeElapsedArr.Init(0.0f, NumOfPillars);
 	StepPillarStartTransformArr.Init(FTransform(), NumOfPillars);
 	StepPillarEndTransformArr.Init(FTransform(), NumOfPillars);
@@ -126,7 +131,7 @@ void ASortActor::SetSmoothMove(int32 ColumnIndex, FTransform EndTransform, float
 bool ASortActor::IsSorted()
 {
 	int32 count = -1;
-	for (auto& Index : SortedPillarIndexArr) {
+	for (auto& Index : BasePillarArr) {
 		if (PillarHeightArr[Index] < count)
 			return false;
 		else
@@ -153,20 +158,35 @@ FTransform ASortActor::GetBaseTransform(int32 BaseIndex)
 
 void ASortActor::MovePillarToBase(int32 PillarIndex, int32 BaseIndex)
 {
+	int32 PillarBaseIndex = -1;
+	for (int32 i = 0; i < BasePillarArr.Num(); i++) {
+		if (BasePillarArr[i] == PillarIndex)
+			PillarBaseIndex = i;
+	}
+	check(PillarBaseIndex == -1);
+
 	FTransform PillarTransform = GetPillarTransformByPillarIndex(PillarIndex);
-	FTransform BaseTransform;
-	if (BaseIndex >= 0)
-		BaseTransform = GetBaseTransform(BaseIndex);
-	else
-		FTransform BaseTransform = ChairTransform;
+	FTransform AvailableBaseTransform;
+	if (BaseIndex >= 0) {
+		AvailableBaseTransform = GetBaseTransform(BaseIndex);
+		BasePillarArr[BaseIndex] = PillarIndex;
+		BasePillarArr[PillarBaseIndex] = -1;
+		AvailableBaseIndex = PillarBaseIndex;
+	}
+	else {
+		AvailableBaseTransform = ChairTransform;
+		ChairPillarIndex = PillarIndex;
+		BasePillarArr[PillarBaseIndex] = -1;
+		AvailableBaseIndex = PillarBaseIndex;
+	}
 	StepPillarStartTransformArr[PillarIndex] = PillarTransform;
-	StepPillarStartTransformArr[PillarIndex] = BaseTransform;
+	StepPillarEndTransformArr[PillarIndex] = AvailableBaseTransform;
 	StepTimeElapsedArr[PillarIndex] = 0;
 }
 
 void ASortActor::GameStep(int32 PillarIndex)
 {
-	MovePillarToBase(PillarIndex, AvailableBase);
+	MovePillarToBase(PillarIndex, AvailableBaseIndex);
 }
 
 int32 ASortActor::GetPillarIndexByInstanceIndex(int32 InstanceIndex)

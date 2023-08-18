@@ -84,8 +84,10 @@ private:
 	TArray<int32> PillarHeightArr;
 	// 这个数组里存储的是根实例的序号。
 	TArray<int32> PillarRootInstanceIndexArr;
-	// 排序后的柱子的Index。
-	TArray<int32> SortedPillarIndexArr;
+	// 底座：柱子 数组
+	TArray<int32> BasePillarArr;
+	// 柱子：底座 数组
+	TArray<int32> PillarBaseArr;
 	// 时间期间
 	TArray<float> StepDurationArr;
 	// 已消耗的时间
@@ -98,5 +100,6 @@ private:
 	TArray<float> StepAlphaArr;
 
 	bool bGaming;
-	int32 AvailableBase;
+	int32 AvailableBaseIndex;
+	int32 ChairPillarIndex;
 };
