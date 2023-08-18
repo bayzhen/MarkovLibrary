@@ -24,7 +24,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		float SquareBlockSideLength;
+		float BaseDistance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		float Height;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
@@ -64,7 +64,15 @@ public:
 		bool IsSorted();
 
 	UFUNCTION(BlurprintCallable, Category = "SortActor")
-		FTransform GetPillarTransform(int32 PillarIndex);
+		FTransform GetPillarTransformByPillarIndex(int32 PillarIndex);
+	// Base是基座，基座上面放得柱子。
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		FTransform GetBaseTransform(int32 BaseIndex);
+
+	UFUNCTION(BlurprintCallable, Category = "SortActor")
+		void MovePillarToBase(int32 PillarIndex, int32 BaseIndex);
+
+
 private:
 	// 一开始生成的随机数数组，这个数组不会动。数字代表着这一柱实例的数量。
 	TArray<int32> PillarHeightArr;
@@ -77,9 +85,12 @@ private:
 	// 已消耗的时间
 	TArray<float> StepTimeElapsedArr;
 	// 开始位置
-	TArray<FTransform> StepStartTransformArr;
+	TArray<FTransform> StepPillarStartTransformArr;
 	// 目标位置
-	TArray<FTransform> StepEndTransformArr;
+	TArray<FTransform> StepPillarEndTransformArr;
 	// Alpha
 	TArray<float> StepAlphaArr;
+
+	bool bGaming;
+
 };
