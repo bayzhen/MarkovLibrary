@@ -13,14 +13,14 @@ ASortActor::ASortActor()
 	InstanceDistance = 100.0;
 	MinimumHeight = 3;
 	MaximumHeight = 20;
-	bRandom = false;
+	bRandom = true;
 	Seed = 10;
 	bGaming = true;
 	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
 	this->SetRootComponent(Cast<USceneComponent>(HISMComponent));
 }
 
-TArray<FTransform> ASortActor::GenerateBasesTransforms()
+TArray<FTransform> ASortActor::GenerateBasesTransforms_Implementation()
 {
 	TArray<FTransform> TransformArr;
 	TransformArr.Init(FTransform(), NumOfBases);
@@ -56,7 +56,7 @@ void ASortActor::Tick(float DeltaTime)
 void ASortActor::Reset()
 {
 	HISMComponent->SetStaticMesh(StaticMesh);
-	SortTable->GenerateBases(NumOfBases,
+	SortTable->GenerateBases(NumOfBases, GenerateBasesTransforms(), MinimumHeight, MaximumHeight, HISMComponent, InstanceDistance, XFloatCurve, YFloatCurve, ZFloatCurve,bRandom, Seed);
 }
 
 void ASortActor::GameStep(int32 PillarIndex)
