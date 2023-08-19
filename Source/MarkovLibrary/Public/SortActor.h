@@ -15,27 +15,27 @@ struct MARKOVLIBRARY_API FPillar
 public:
 	TSharedPtr<FBase> Base;
 	int32 Height;
-	TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent;
+	UHierarchicalInstancedStaticMeshComponent* HISMComponent;
 	float InstanceDistance;
 	TArray<int32> InstanceIndexArr;
 	FTransform Transform;
 	FTransform StartTransform;
 	FTransform EndTransform;
 	float TimeExplased;
-	FFloatCurve* XFloatCurve;
-	FFloatCurve* YFloatCurve;
-	FFloatCurve* ZFloatCurve;
+	FFloatCurve XFloatCurve;
+	FFloatCurve YFloatCurve;
+	FFloatCurve ZFloatCurve;
 	float Duration;
 	FPillar() {}
 	FPillar(
 		TSharedPtr<FBase> Base,
 		int32 Height,
-		TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent,
+		UHierarchicalInstancedStaticMeshComponent* HISMComponent,
 		float InstanceDistance,
 		FTransform BaseTransform,
-		FFloatCurve* XFloatCurve,
-		FFloatCurve* YFloatCurve,
-		FFloatCurve* ZFloatCurve,
+		FFloatCurve& XFloatCurve,
+		FFloatCurve& YFloatCurve,
+		FFloatCurve& ZFloatCurve,
 		float Duration = 0.5
 	) :
 		Base(Base),
@@ -69,9 +69,9 @@ public:
 			return;
 		}
 		float Alpha = FMath::Clamp(TimeExplased / Duration, 0.0f, 1.0f);
-		float XAlpha = XFloatCurve->Evaluate(Alpha);
-		float YAlpha = YFloatCurve->Evaluate(Alpha);
-		float ZAlpha = ZFloatCurve->Evaluate(Alpha);
+		float XAlpha = XFloatCurve.Evaluate(Alpha);
+		float YAlpha = YFloatCurve.Evaluate(Alpha);
+		float ZAlpha = ZFloatCurve.Evaluate(Alpha);
 		FVector StartLocation = StartTransform.GetLocation();
 		float StartX = StartLocation.X;
 		float StartY = StartLocation.Y;
@@ -103,11 +103,11 @@ public:
 	void GeneratePillar(FRandomStream& RandomStream,
 		int32 MinimumHeight,
 		int32 MaximumHeight,
-		TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent,
+		UHierarchicalInstancedStaticMeshComponent* HISMComponent,
 		float InstanceDistance,
-		FFloatCurve* XFloatCurve,
-		FFloatCurve* YFloatCurve,
-		FFloatCurve* ZFloatCurve,
+		FFloatCurve& XFloatCurve,
+		FFloatCurve& YFloatCurve,
+		FFloatCurve& ZFloatCurve,
 		float Duration = 0.5)
 	{
 		int32 Height = RandomStream.RandRange(MinimumHeight, MaximumHeight);
@@ -131,11 +131,11 @@ public:
 		TArray<FTransform> Transforms,
 		int32 MinimumHeight,
 		int32 MaximumHeight,
-		TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent,
+		UHierarchicalInstancedStaticMeshComponent* HISMComponent,
 		float InstanceHeight,
-		FFloatCurve* XFloatCurve,
-		FFloatCurve* YFloatCurve,
-		FFloatCurve* ZFloatCurve,
+		FFloatCurve XFloatCurve,
+		FFloatCurve YFloatCurve,
+		FFloatCurve ZFloatCurve,
 		bool bRandom = true,
 		int32 Seed = 0)
 	{
@@ -154,6 +154,7 @@ public:
 				ZFloatCurve);
 		}
 	}
+
 	void Switch(int32 AIndex, int32 BIndex) {
 		// Base的指针不会变，所以可以用引用。
 		// Pillar的指针会变，所以不用引用。
@@ -190,9 +191,6 @@ class MARKOVLIBRARY_API ASortActor : public AActor
 public:
 	// Sets default values for this actor's properties
 	ASortActor();
-	UFUNCTION(BlueprintNativeEvent, Category = "YourCategory")
-		TArray<FTransform> GenerateBasesTransforms();
-protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void OnConstruction(const FTransform& Transform) override;
@@ -218,11 +216,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		UHierarchicalInstancedStaticMeshComponent* HISMComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		UCurveFloat* XCurveFloat;
+		FFloatCurve XFloatCurve;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		UCurveFloat* YCurveFloat;
+		FFloatCurve YFloatCurve;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		UCurveFloat* ZCurveFloat;
+		FFloatCurve ZFloatCurve;
 
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void Reset();
@@ -230,7 +228,9 @@ public:
 		int32 GetPillarIndexByInstanceIndex(int32 ItemIndex);
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void GameStep(int32 PillarIndex);
-
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "SortActor")
+		TArray<FTransform> GenerateBasesTransforms();
 private:
 	TSharedPtr<FSortTable> SortTable;
 	bool bGaming;
