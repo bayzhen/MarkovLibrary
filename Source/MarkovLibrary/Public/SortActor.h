@@ -99,7 +99,7 @@ public:
 		FTransform Transform;
 	TSharedPtr<FPillar> Pillar;
 	FBase() {}
-	FBase(FTransform Transform):Transform(Transform) {}
+	FBase(FTransform Transform) :Transform(Transform) {}
 	void GeneratePillar(FRandomStream& RandomStream,
 		int32 MinimumHeight,
 		int32 MaximumHeight,
@@ -137,7 +137,7 @@ public:
 		FFloatCurve* YFloatCurve,
 		FFloatCurve* ZFloatCurve,
 		bool bRandom = true,
-		int32 Seed = 0) 
+		int32 Seed = 0)
 	{
 		if (!bRandom)
 			RandomStream.Initialize(Seed);
@@ -190,13 +190,17 @@ class MARKOVLIBRARY_API ASortActor : public AActor
 public:
 	// Sets default values for this actor's properties
 	ASortActor();
+	UFUNCTION(BlueprintNativeEvent, Category = "YourCategory")
+		TArray<FTransform> GenerateBasesTransforms();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
+		int32 NumOfBases;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		float InstanceDistance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
