@@ -4,7 +4,183 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "SortActor.generated.h"
+
+
+USTRUCT(BlueprintType)
+struct MARKOVLIBRARY_API FPillar
+{
+	GENERATED_BODY()
+public:
+	TSharedPtr<FBase> Base;
+	int32 Height;
+	TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent;
+	float InstanceDistance;
+	TArray<int32> InstanceIndexArr;
+	FTransform Transform;
+	FTransform StartTransform;
+	FTransform EndTransform;
+	float TimeExplased;
+	FFloatCurve* XFloatCurve;
+	FFloatCurve* YFloatCurve;
+	FFloatCurve* ZFloatCurve;
+	float Duration;
+	FPillar() {}
+	FPillar(
+		TSharedPtr<FBase> Base,
+		int32 Height,
+		TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent,
+		float InstanceDistance,
+		FTransform BaseTransform,
+		FFloatCurve* XFloatCurve,
+		FFloatCurve* YFloatCurve,
+		FFloatCurve* ZFloatCurve,
+		float Duration = 0.5
+	) :
+		Base(Base),
+		Height(Height),
+		HISMComponent(HISMComponent),
+		InstanceDistance(InstanceDistance),
+		Transform(BaseTransform),
+		StartTransform(BaseTransform),
+		EndTransform(BaseTransform),
+		XFloatCurve(XFloatCurve),
+		YFloatCurve(YFloatCurve),
+		ZFloatCurve(ZFloatCurve),
+		Duration(Duration)
+	{
+		InstanceIndexArr.Init(0, Height);
+		for (int32 i = 0; i < Height; i++) {
+			FVector Location = Transform.GetLocation();
+			Location.Z += i * InstanceDistance;
+			Transform.SetLocation(Location);
+			int32 Index = HISMComponent->AddInstance(Transform, true);
+			InstanceIndexArr[i] = Index;
+		}
+		TimeExplased = 0.0f;
+	}
+	void Tick(float Delta)
+	{
+		if (TimeExplased < Duration) {
+			TimeExplased += Delta;
+		}
+		else {
+			return;
+		}
+		float Alpha = FMath::Clamp(TimeExplased / Duration, 0.0f, 1.0f);
+		float XAlpha = XFloatCurve->Evaluate(Alpha);
+		float YAlpha = YFloatCurve->Evaluate(Alpha);
+		float ZAlpha = ZFloatCurve->Evaluate(Alpha);
+		FVector StartLocation = StartTransform.GetLocation();
+		float StartX = StartLocation.X;
+		float StartY = StartLocation.Y;
+		float StartZ = StartLocation.Z;
+		FVector EndLocation = EndTransform.GetLocation();
+		float EndX = EndLocation.X;
+		float EndY = EndLocation.Y;
+		float EndZ = EndLocation.Z;
+		float X = FMath::Lerp(StartX, EndX, Alpha);
+		float Y = FMath::Lerp(StartY, EndY, Alpha);
+		float Z = FMath::Lerp(StartZ, EndZ, Alpha);
+		Transform.SetLocation(FVector(X, Y, Z));
+		for (int32 i = 0; i < InstanceIndexArr.Num(); i++) {
+			HISMComponent->BatchUpdateInstancesTransform(InstanceIndexArr[0], InstanceIndexArr.Num(), Transform, true);
+		}
+	}
+};
+
+USTRUCT(BlueprintType)
+struct MARKOVLIBRARY_API FBase
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere)
+		FTransform Transform;
+	TSharedPtr<FPillar> Pillar;
+	FBase() {}
+	FBase(FTransform Transform):Transform(Transform) {}
+	void GeneratePillar(FRandomStream& RandomStream,
+		int32 MinimumHeight,
+		int32 MaximumHeight,
+		TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent,
+		float InstanceDistance,
+		FFloatCurve* XFloatCurve,
+		FFloatCurve* YFloatCurve,
+		FFloatCurve* ZFloatCurve,
+		float Duration = 0.5)
+	{
+		int32 Height = RandomStream.RandRange(MinimumHeight, MaximumHeight);
+		TSharedPtr<FPillar> ItsPillar(new FPillar(TSharedPtr<FBase>(this), Height, HISMComponent, InstanceDistance, Transform, XFloatCurve, YFloatCurve, ZFloatCurve, Duration));
+		Pillar = ItsPillar;
+	}
+	void Tick(float Delta) {
+		Pillar->Tick(Delta);
+	}
+};
+
+USTRUCT(BlueprintType)
+struct MARKOVLIBRARY_API FSortTable
+{
+	GENERATED_BODY()
+public:
+	TArray<FBase> BaseArr;
+	FRandomStream RandomStream;
+	FSortTable() {}
+	void GenerateBases(int32 Num,
+		TArray<FTransform> Transforms,
+		int32 MinimumHeight,
+		int32 MaximumHeight,
+		TSharedPtr<UHierarchicalInstancedStaticMeshComponent> HISMComponent,
+		float InstanceHeight,
+		FFloatCurve* XFloatCurve,
+		FFloatCurve* YFloatCurve,
+		FFloatCurve* ZFloatCurve,
+		bool bRandom = true,
+		int32 Seed = 0) 
+	{
+		if (!bRandom)
+			RandomStream.Initialize(Seed);
+		BaseArr.SetNum(Num);
+		for (int32 i = 0; i < Num; i++) {
+			BaseArr[i] = FBase(Transforms[i]);
+			BaseArr[i].GeneratePillar(RandomStream,
+				MinimumHeight,
+				MaximumHeight,
+				HISMComponent,
+				InstanceHeight,
+				XFloatCurve,
+				YFloatCurve,
+				ZFloatCurve);
+		}
+	}
+	void Switch(int32 AIndex, int32 BIndex) {
+		// Base的指针不会变，所以可以用引用。
+		// Pillar的指针会变，所以不用引用。
+		auto& ABase = BaseArr[AIndex];
+		auto& BBase = BaseArr[BIndex];
+		auto& ABaseTransform = ABase.Transform;
+		auto& BBaseTransform = BBase.Transform;
+		auto APillar = ABase.Pillar;
+		auto BPillar = BBase.Pillar;
+		auto APillarTransform = ABase.Pillar->Transform;
+		auto BPillarTransform = BBase.Pillar->Transform;
+		APillar->StartTransform = APillarTransform;
+		APillar->EndTransform = BBaseTransform;
+		APillar->TimeExplased = 0.0f;
+		BPillar->StartTransform = BPillarTransform;
+		BPillar->EndTransform = ABaseTransform;
+		BPillar->TimeExplased = 0.0f;
+		ABase.Pillar = BPillar;
+		BBase.Pillar = APillar;
+	}
+
+	void Tick(float Delta) {
+		for (auto& Base : BaseArr) {
+			Base.Tick(Delta);
+		}
+	}
+};
 
 UCLASS()
 class MARKOVLIBRARY_API ASortActor : public AActor
@@ -14,8 +190,6 @@ class MARKOVLIBRARY_API ASortActor : public AActor
 public:
 	// Sets default values for this actor's properties
 	ASortActor();
-	virtual void OnConstruction(const FTransform& Transform) override;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -24,13 +198,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		float BaseDistance;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		float Height;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		float StaticCubeScale;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		int32 NumOfPillars;
+		float InstanceDistance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		int32 MinimumHeight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
@@ -46,60 +214,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
 		UHierarchicalInstancedStaticMeshComponent* HISMComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		UCurveFloat* CurveFloat;
+		UCurveFloat* XCurveFloat;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		FTransform ChairTransform;
+		UCurveFloat* YCurveFloat;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SortActor")
-		int32 SelectedPillarIndex;
+		UCurveFloat* ZCurveFloat;
 
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void Reset();
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		void UpdatePillarTransform(int32 StartInstanceIndex, FTransform Transform);
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		int32 GetPillarIndexByInstanceIndex(int32 ItemIndex);
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		void TickMove(float Delta);
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		void GetColumnTransform(int32 ColumnIndex);
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		void SetSmoothMove(int32 ColumnIndex, FTransform EndTransform, float Duration);
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		bool IsSorted();
-
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		FTransform GetPillarTransformByPillarIndex(int32 PillarIndex);
-	// Base是基座，基座上面放得柱子。
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		FTransform GetBaseTransform(int32 BaseIndex);
-
-	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		void MovePillarToBase(int32 PillarIndex, int32 BaseIndex);
-
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void GameStep(int32 PillarIndex);
 
 private:
-	// 一开始生成的随机数数组，这个数组不会动。数字代表着这一柱实例的数量。
-	TArray<int32> PillarHeightArr;
-	// 这个数组里存储的是根实例的序号。
-	TArray<int32> PillarRootInstanceIndexArr;
-	// 底座：柱子 数组
-	TArray<int32> BasePillarArr;
-	// 柱子：底座 数组
-	TArray<int32> PillarBaseArr;
-	// 时间期间
-	TArray<float> StepDurationArr;
-	// 已消耗的时间
-	TArray<float> StepTimeElapsedArr;
-	// 开始位置
-	TArray<FTransform> StepPillarStartTransformArr;
-	// 目标位置
-	TArray<FTransform> StepPillarEndTransformArr;
-	// Alpha
-	TArray<float> StepAlphaArr;
-
+	TSharedPtr<FSortTable> SortTable;
 	bool bGaming;
-	int32 AvailableBaseIndex;
-	int32 ChairPillarIndex;
 };
