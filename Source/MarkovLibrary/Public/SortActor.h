@@ -225,7 +225,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void Reset();
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
-		int32 GetPillarIndexByInstanceIndex(int32 ItemIndex);
+		FBase GetBaseByPillarInstanceIndex(int32 ItemIndex);
 	UFUNCTION(BlueprintCallable, Category = "SortActor")
 		void GameStep(int32 PillarIndex);
 	

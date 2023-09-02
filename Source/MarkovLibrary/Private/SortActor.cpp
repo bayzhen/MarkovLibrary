@@ -18,6 +18,7 @@ ASortActor::ASortActor()
 	bGaming = true;
 	HISMComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("HISMComponent"));
 	this->SetRootComponent(Cast<USceneComponent>(HISMComponent));
+	SortTable = MakeShared<FSortTable>();
 }
 
 TArray<FTransform> ASortActor::GenerateBasesTransforms_Implementation()
@@ -61,9 +62,16 @@ void ASortActor::Reset()
 
 void ASortActor::GameStep(int32 PillarIndex)
 {
+
 }
 
-int32 ASortActor::GetPillarIndexByInstanceIndex(int32 InstanceIndex)
+FBase ASortActor::GetBaseByPillarInstanceIndex(int32 InstanceIndex)
 {
-	return 0;
+	for (int32 i = 0; i < SortTable->BaseArr.Num();i++) {
+		auto& Base = SortTable->BaseArr[i];
+		if (Base.Pillar->InstanceIndexArr.Contains(InstanceIndex)) {
+			return Base;
+		};
+	}
+	return SortTable->BaseArr[0];
 }
