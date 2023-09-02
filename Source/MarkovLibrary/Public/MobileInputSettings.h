@@ -12,7 +12,7 @@
 UCLASS(config = Input, defaultconfig)
 class MARKOVLIBRARY_API UMobileInputSettings : public UObject
 {
-	GENERATED_UCLASS_BODY()
-	UPROPERTY(config, EditAnywhere, Category = "Mobile", meta = (AllowedClasses = "/Script/Engine.TouchInterface"))
-	FSoftObjectPath OverrideTouchInterface;
+	GENERATED_BODY()
+
+		UMobileInputSettings() {};
 };
