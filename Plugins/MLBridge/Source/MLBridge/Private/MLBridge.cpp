@@ -23,12 +23,13 @@ void FMLBridgeModule::StartupModule()
 			LOCTEXT("RuntimeSettingsName", "MLBridge"), FText::FromString(TEXT("The Machine Learning Bridge streamlines communication and execution of instructions between the AI training machine and clients.")), 
 			GetMutableDefault<UMLBSettings>());
 	}
-	/*MLBCommunicateThread = TSharedPtr<FMLBCommunicateThread>(new FMLBCommunicateThread(Settings->SocketIP, Settings->SocketPort));*/
+	MLBCommunicateThread = TSharedPtr<FMLBCommunicateThread>(new FMLBCommunicateThread(Settings->SocketIP, Settings->SocketPort));
 }
 
 void FMLBridgeModule::ShutdownModule()
 {
-	/*MLBCommunicateThread->Stop();*/
+	MLBCommunicateThread->Stop();
+	MLBCommunicateThread->Thread->WaitForCompletion();
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 }

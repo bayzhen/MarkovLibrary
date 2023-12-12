@@ -11,35 +11,47 @@
 class MLBRIDGE_API FMLBCommunicateThread : public FRunnable
 {
 public:
-    FMLBCommunicateThread(const FString& IPAddress, int32 Port);
-    virtual ~FMLBCommunicateThread();
 
-    virtual uint32 Run() override;
-    virtual void Stop() override;
-    virtual void Exit() override;
+	// Initializes the thread with the provided IP address and port number.
+	// It sets up the internet address and creates the thread with a below normal priority.
+	// The Finished flag is set to false, meaning the thread has not finished its task yet.
+	FMLBCommunicateThread(const FString& IPAddress, int32 Port);
+	virtual ~FMLBCommunicateThread();
 
-    void EnqueueCommand(const FString& Command);
-    bool DequeueCommand(FString& OutCommand);
-    void SendObs(const FString& Data);
-    static FMLBCommunicateThread* GetThread();
+
+	// Main loop of the FMLBCommunicateThread class. It manages the connection state, handles receiving and processing data,
+	// and sends outgoing data as needed.
+	// It continuously checks whether it needs to stop the thread and, if not, whether the socket is connected.
+	// If connected, it sets the socket to non-blocking mode and receives data in chunks, concatenating received data parts into a complete message.
+	// Then, it processes the incoming data and sends any queued outgoing messages.
+	// The loop sleeps for 0.01 seconds between iterations to prevent excessive resource usage.
+	// When the loop ends, it sets the Finished flag to true and logs a message indicating that the Run() method is finished.
+	virtual uint32 Run() override;
+	virtual void Stop() override;
+	virtual void Exit() override;
+
+	void EnqueueCommand(const FString& Command);
+	bool DequeueCommand(FString& OutCommand);
+	void SendObs(const FString& Data);
+	static FMLBCommunicateThread* GetThread();
 
 public:
-    FThreadSafeBool bStopThread;
+	FThreadSafeBool bStopThread;
+	FRunnableThread* Thread;
+	FString IPAddress;
+	int32 Port;
 
-    FString IPAddress;
-    int32 Port;
+	TQueue<FString> CommandQueue;
+	TQueue<FString> ObsQueue;
 
-    TQueue<FString> CommandQueue;
-    TQueue<FString> ObsQueue;
+	TSharedPtr<FSocket> Socket;
+	TSharedPtr<FInternetAddr> Addr;
 
-    TSharedPtr<FSocket> Socket;
-    TSharedPtr<FInternetAddr> Addr;
+	void TryReconnect();
+	bool ProcessIncomingData(FString& InData);
 
-    void TryReconnect();
-    bool ProcessIncomingData(FString& InData);
-
-    bool SendData(const FString& Data);
-    bool Finished;
-    const int32 ReceiveBufferSize = 1024;
-    static FMLBCommunicateThread* self;
+	bool SendData(const FString& Data);
+	bool Finished;
+	const int32 ReceiveBufferSize = 1024;
+	static FMLBCommunicateThread* self;
 };
