@@ -139,15 +139,6 @@ void AMLBManager::PressKeys(TArray<float> InputValues)
 		return;
 	}
 	else {
-		// 如果要与场景交互则使用
-		//const auto GameViewport = GEngine->GameViewport;
-		////GameViewport->InputKey(FInputKeyEventArgs(GameViewport->GetGameViewport(),
-		//FKey Key = EKeys::W; // 指定W键
-		//EInputEvent Event = EInputEvent::IE_Pressed; // 指定按下事件
-		//float AmountDepressed = 1.0f; // 指定按下的程度
-		//bool bIsTouchEvent = false; // 指定是否为触摸事件
-		//FInputKeyEventArgs(GameViewport->Viewport, 0, Key, Event, AmountDepressed, bIsTouchEvent);
-
 		for (int i = 0; i < Settings->InputKeys.Num(); i++) {
 			FName KeyName = Settings->InputKeys[i];
 			double KeyValue = InputValues[i];

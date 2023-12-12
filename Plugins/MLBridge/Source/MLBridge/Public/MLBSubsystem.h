@@ -23,10 +23,10 @@ public:
     UPlayerInput* GetPlayerInput();
 
     UFUNCTION(BlueprintCallable)
-    void PressKey(FName KeyName, float Duration); 
+    void SimulateKeyPressAndRelase(FName KeyName, float Duration); 
 
     UFUNCTION(BlueprintCallable)
-    void ReleaseKey(FName KeyName);
+    void SimulateKeyRelease(FName KeyName);
     // Add your custom functions here
 
     static UMLBSubsystem* self;

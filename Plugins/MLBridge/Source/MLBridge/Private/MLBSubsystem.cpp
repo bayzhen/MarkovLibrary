@@ -49,7 +49,7 @@ UPlayerInput* UMLBSubsystem::GetPlayerInput()
 	return PlayerInput.Get();
 }
 
-void UMLBSubsystem::PressKey(FName KeyName, float Duration)
+void UMLBSubsystem::SimulateKeyPressAndRelase(FName KeyName, float Duration)
 {
 	FInputKeyParams InputKeyParams(FKey(KeyName), EInputEvent::IE_Pressed, 1.0);
 	this->GetPlayerInput()->InputKey(InputKeyParams);
@@ -59,7 +59,7 @@ void UMLBSubsystem::PressKey(FName KeyName, float Duration)
 	this->GetRunningWorld()->GetTimerManager().SetTimer(TimerHandle, Delegate, Duration, false);
 }
 
-void UMLBSubsystem::ReleaseKey(FName KeyName)
+void UMLBSubsystem::SimulateKeyRelease(FName KeyName)
 {
 	FInputKeyParams InputKeyParams(FKey(KeyName), EInputEvent::IE_Released, 1.0);
 	this->GetPlayerInput()->InputKey(InputKeyParams);
