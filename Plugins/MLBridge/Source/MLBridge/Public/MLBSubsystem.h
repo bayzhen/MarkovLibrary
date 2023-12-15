@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Subsystems/Subsystem.h"
-#include "MLBSettings.h"
+#include "MLBSetting.h"
 #include "MLBSubsystem.generated.h"
 
 UCLASS()

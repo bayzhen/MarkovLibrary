@@ -39,7 +39,6 @@ public class MLBridge : ModuleRules
 				"Slate",
 				"SlateCore",
                 "Sockets",
-				"Settings",
                 "Json",
                 "Networking", 
 				"InputCore",

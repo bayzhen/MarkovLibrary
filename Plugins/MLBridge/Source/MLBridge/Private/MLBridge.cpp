@@ -2,8 +2,7 @@
 
 #include "MLBridge.h"
 #include "MLBManager.h"
-#include "MLBSettings.h"
-#include "ISettingsModule.h"
+#include "MLBSetting.h"
 #define LOCTEXT_NAMESPACE "FMLBridgeModule"
 
 /// <summary>
@@ -15,15 +14,13 @@
 /// </summary>
 void FMLBridgeModule::StartupModule()
 {
-	Settings = GetMutableDefault<UMLBSettings>();
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
-	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
-	{
-		SettingsModule->RegisterSettings("Project", "Plugins", "MLBridge",
-			LOCTEXT("RuntimeSettingsName", "MLBridge"), FText::FromString(TEXT("The Machine Learning Bridge streamlines communication and execution of instructions between the AI training machine and clients.")), 
-			GetMutableDefault<UMLBSettings>());
+	UDataTable* MyDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Script/Engine.DataTable'/MLBridge/DT_MLBConnectionSettings.DT_MLBConnectionSettings'"));
+	if (MyDataTable) {
+		FMLBConnectionSetting* RowData = MyDataTable->FindRow<FMLBConnectionSetting>("1", FString(TEXT("LookupRow")));
+		SocketIP = RowData->SocketIP;
+		SocketPort = RowData->SocketPort;
+		MLBCommunicateThread = TSharedPtr<FMLBCommunicateThread>(new FMLBCommunicateThread(SocketIP, SocketPort));
 	}
-	MLBCommunicateThread = TSharedPtr<FMLBCommunicateThread>(new FMLBCommunicateThread(Settings->SocketIP, Settings->SocketPort));
 }
 
 void FMLBridgeModule::ShutdownModule()

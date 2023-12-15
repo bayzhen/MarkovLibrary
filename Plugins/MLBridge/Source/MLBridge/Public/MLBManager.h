@@ -13,7 +13,7 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/DateTime.h"
 
-#include "MLBSettings.h"
+#include "MLBSetting.h"
 #include "MLBCommunicateThread.h"
 
 #include "MLBManager.generated.h"
@@ -91,9 +91,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "MLBridge")
 	void SocketReconnect();
 public:
-	// 通用设置
-	UMLBSettings* Settings;
-
 	FSocket* Socket;
 public:
 	// ML参数
@@ -121,4 +118,6 @@ public:
 	TSharedPtr<FJsonObject> ParseFStringIntoJson(FString& jsonString);
 
 	TSharedPtr<FJsonObject> JsonObjectPtr;
+
+	FMLBTrainingSetting* MLBTrainingSetting;
 };

@@ -1,7 +1,6 @@
 #include "MLBManager.h"
 #include "TimerManager.h"
-#include "MLBSettings.h"
-
+#include "MLBSetting.h"
 
 #include "GameFramework/Character.h"
 #include "GameFramework/WorldSettings.h"
@@ -14,12 +13,13 @@
 void AMLBManager::BeginPlay()
 {
 	Super::BeginPlay();
-	Settings = GetMutableDefault<UMLBSettings>();
 	IsTraining = false;
 	NeedToReturnObs = false;
 	TimeRecord = FDateTime::Now();
 	Count = 1;
 	MLBCommunicateThread = FMLBCommunicateThread::GetThread();
+	UDataTable* MyDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Script/Engine.DataTable'/MLBridge/DT_MLBTrainingSettings.DT_MLBTrainingSettings'"));
+	MLBTrainingSetting = MyDataTable->FindRow<FMLBTrainingSetting>("1", FString(TEXT("LookupRow")));
 }
 
 
@@ -68,7 +68,7 @@ void AMLBManager::StepEnv(TArray<float>& actions) {
 
 void AMLBManager::HttpSend()
 {
-	auto Url = Settings->HttpURL;
+	/*auto Url = Settings->HttpURL;
 	auto ContentString = GetObsJsonString();
 	FHttpModule* HttpModule = FModuleManager::LoadModulePtr<FHttpModule>("HTTP");
 	if (HttpModule)
@@ -85,7 +85,7 @@ void AMLBManager::HttpSend()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load HTTP module"));
-	}
+	}*/
 }
 
 void AMLBManager::HttpReceive(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bSuccess)
@@ -129,18 +129,18 @@ void AMLBManager::HttpReceive(FHttpRequestPtr Request, FHttpResponsePtr Response
 	}
 	PressKeys(InputValues);
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer<AMLBManager>(TimerHandle, this, &AMLBManager::HttpSend, Settings->MLBDeltaTime, false);
+	GetWorld()->GetTimerManager().SetTimer<AMLBManager>(TimerHandle, this, &AMLBManager::HttpSend, MLBTrainingSetting->MLBDeltaTime, false);
 }
 
 void AMLBManager::PressKeys(TArray<float> InputValues)
 {
-	if (Settings->InputKeys.Num() != InputValues.Num()) {
+	if (MLBTrainingSetting->InputKeys.Num() != InputValues.Num()) {
 		UE_LOG(LogTemp, Warning, TEXT("MLB action num not right."));
 		return;
 	}
 	else {
-		for (int i = 0; i < Settings->InputKeys.Num(); i++) {
-			FName KeyName = Settings->InputKeys[i];
+		for (int i = 0; i < MLBTrainingSetting->InputKeys.Num(); i++) {
+			FName KeyName = MLBTrainingSetting->InputKeys[i];
 			double KeyValue = InputValues[i];
 			if (KeyName == "MouseX") {
 				MoveMouse(FVector2D(KeyValue * 500, 0));

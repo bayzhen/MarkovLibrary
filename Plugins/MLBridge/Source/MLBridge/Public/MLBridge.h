@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "MLBCommunicateThread.h"
-#include "MLBSettings.h"
 #include "Modules/ModuleManager.h"
 
 class MLBRIDGE_API FMLBridgeModule : public IModuleInterface
@@ -14,5 +13,6 @@ public:
 	virtual void ShutdownModule() override;
 
 	TSharedPtr<FMLBCommunicateThread> MLBCommunicateThread;
-	UMLBSettings* Settings;
+	FString SocketIP;
+	int SocketPort ;
 };
